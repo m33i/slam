@@ -5,10 +5,10 @@ class Display:
     def __init__(self, W, H):
         self.W = W
         self.H = H
-        self.display_name = 'slam'
-        cv2.namedWindow(self.display_name, cv2.WINDOW_NORMAL)
-        cv2.moveWindow(self.display_name, 0, 0)
-        cv2.resizeWindow(self.display_name, W*2, H*2)
+        self.window_name = 'slam'
+        cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
+        cv2.moveWindow(self.window_name, 0, 0)
+        cv2.resizeWindow(self.window_name, W*2, H*2)
         
         # initialize the displays
         self.displays = {
@@ -52,7 +52,7 @@ class Display:
         cv2.putText(self.combined_display, "Open3D", (self.W + 10, 30), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
     
-        cv2.imshow(self.display_name, self.combined_display)
+        cv2.imshow(self.window_name, self.combined_display)
     
     def close(self):
-        cv2.destroyWindow(self.display_name)
+        cv2.destroyWindow(self.window_name)
