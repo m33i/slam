@@ -39,7 +39,11 @@ def process_frame(img):
         if points_3d is not None and points_3d.shape[1] == 3:
             # generated colors based on pixel values
             try:
-                colors = frame[points[:, 1].astype(int), points[:, 0].astype(int)] / 255.0
+                valid_y = np.clip(points[:, 1], 0, frame.shape[0]-1).astype(int)
+                valid_x = np.clip(points[:, 0], 0, frame.shape[1]-1).astype(int)
+
+                colors = frame[valid_y, valid_x] / 255.0
+
                 mapping.update_map(points_3d, colors)
             except IndexError:
                 print("[Warning] Could not generate colors for some points - skipping frame")

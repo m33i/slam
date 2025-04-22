@@ -21,6 +21,9 @@ class Mapping:
         view_control.set_front([0, 0, -1])
         view_control.set_lookat([0, 0, 0])
         view_control.set_up([0, -1, 0])
+        
+        # first update flag
+        self.first_update = True
 
     def update_map(self, points, colors=None):
         if len(points) == 0:
@@ -36,11 +39,14 @@ class Mapping:
         else:
             current_pcd.paint_uniform_color([1, 1, 1])
 
-        # merge with existing point cloud
-        if len(self.pcd.points) == 0:
-            self.pcd.points = current_pcd.points
-            self.pcd.colors = current_pcd.colors
+        # if first update, set the current point cloud as the initial point cloud
+        if self.first_update:
+            self.pcd = current_pcd
+            self.vis.remove_geometry(self.pcd)
+            self.vis.add_geometry(self.pcd)
+            self.first_update = False
         else:
+            # merge with existing point cloud
             self.pcd.points = o3d.utility.Vector3dVector(
                 np.vstack((np.asarray(self.pcd.points), np.asarray(current_pcd.points)))
             )
@@ -54,4 +60,4 @@ class Mapping:
         self.vis.update_renderer()
 
     def close(self):
-        self.vis.destroy_window()
+        self.vis.destroy_window()#
