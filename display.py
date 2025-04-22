@@ -37,7 +37,6 @@ class Display:
             self.displays[display_type] = frame
             
         self._update_display()
-        return cv2.waitKey(1)
         
     def _update_display(self):
         # combine top row

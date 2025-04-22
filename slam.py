@@ -3,6 +3,7 @@ import numpy as np
 from display import Display
 from feat_extractor import FeatExtractor
 from mapping import Mapping
+import sys
 
 W = 1920 // 2
 H = 1080 // 2
@@ -66,11 +67,13 @@ def process_frame(frame):
 
 if __name__ == "__main__":
     # open video
-    cap = cv2.VideoCapture("video_examples/test_road.mp4")
+    vid = sys.argv[1]
+    
+    cap = cv2.VideoCapture(vid)
     
     # check if video opened successfully
     if not cap.isOpened():
-        print("err: Could not open video")
+        print("error: Could not open video")
         exit()
     
     try:
