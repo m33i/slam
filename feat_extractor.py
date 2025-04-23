@@ -147,7 +147,7 @@ class FeatExtractor:
                 return False, None, None
             
             # recover pose from essential matrix
-            _, R, t = cv2.recoverPose(E, src_pts, dst_pts, self.K, mask=mask)
+            _, R, t, new_mask = cv2.recoverPose(E, src_pts, dst_pts, self.K, mask=mask)
             
             # check if rotation is reasonable (not too large)
             angle = np.arccos((np.trace(R) - 1) / 2)
