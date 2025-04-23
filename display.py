@@ -46,9 +46,9 @@ class Display:
         self.combined_display = np.vstack([top_row, self.displays['matching']])
         
         # labels
-        cv2.putText(self.combined_display, "Features", (10, 30), 
+        cv2.putText(self.combined_display, "features", (10, 30), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        cv2.putText(self.combined_display, "Open3D", (self.W + 10, 30), 
+        cv2.putText(self.combined_display, "open3d", (self.W + 10, 30), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
     
         cv2.imshow(self.window_name, self.combined_display)

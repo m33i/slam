@@ -66,7 +66,7 @@ class FeatExtractor:
             curr_pts = np.float32([keypoints[m.trainIdx].pt for m in matches])
             
             # estimate camera motion
-            success, R, t = self.estimate_rigid_transform(prev_pts, curr_pts)
+            success, R, t = self.estimate_transform(prev_pts, curr_pts)
             
             if success:
                 # scale translation to keep motion reasonable
@@ -86,13 +86,13 @@ class FeatExtractor:
                 
                 # update pose (camera moves in opposite direction)
                 self.curr_pose = np.dot(self.curr_pose, np.linalg.inv(T))
-                print(f"Motion estimated: translation = {np.linalg.norm(t):.3f}")
+                print(f"motion estimated: translation = {np.linalg.norm(t):.3f}")
             else:
                 # using predicted motion based on previous velocity
                 T = np.eye(4)
                 T[:3, 3] = self.velocity.ravel()
                 self.curr_pose = np.dot(self.curr_pose, np.linalg.inv(T))
-                print(f"Using motion model: translation = {np.linalg.norm(self.velocity):.3f}")
+                print(f"using motion model: translation = {np.linalg.norm(self.velocity):.3f}")
         
         # update previous frame data
         self.prev_img = gray.copy()
@@ -125,7 +125,7 @@ class FeatExtractor:
             print(f"error in matching: {e}")
             return []
 
-    def estimate_rigid_transform(self, src_pts, dst_pts):
+    def estimate_transform(self, src_pts, dst_pts):
         try:
             if len(src_pts) < 8 or len(dst_pts) < 8:
                 return False, None, None
@@ -147,7 +147,7 @@ class FeatExtractor:
                 return False, None, None
             
             # recover pose from essential matrix
-            _, R, t, new_mask = cv2.recoverPose(E, src_pts, dst_pts, self.K, mask=mask)
+            _, R, t = cv2.recoverPose(E, src_pts, dst_pts, self.K, mask=mask)
             
             # check if rotation is reasonable (not too large)
             angle = np.arccos((np.trace(R) - 1) / 2)
@@ -185,4 +185,4 @@ class FeatExtractor:
             print(f"error drawing matches: {e}")
 
     def get_pose(self):
-        return self.curr_pose # debugger()
+        return self.curr_pose # debugger
