@@ -12,9 +12,10 @@ class FeatExtractor:
         else:
             self.gftt = cv2.GFTTDetector_create(
                 maxCorners=5000,
-                qualityLevel=0.01,
-                minDistance=7,
-                blockSize=7
+                qualityLevel=0.01,  # lowest = better
+                minDistance=7,      # allows closer points
+                blockSize=7,        # small window for sens.
+                useHarrisDetector=True
             )
             self.brief = cv2.xfeatures2d.BriefDescriptorExtractor_create()
             self.orb = None
@@ -105,13 +106,13 @@ class FeatExtractor:
                 
                 # update pose (camera moves in opposite direction)
                 self.curr_pose = np.dot(self.curr_pose, np.linalg.inv(T))
-                print(f"motion estimated: translation = {np.linalg.norm(t):.3f}")
+                #print(f"motion estimated: translation = {np.linalg.norm(t):.3f}")
             else:
                 # using predicted motion based on previous velocity
                 T = np.eye(4)
                 T[:3, 3] = self.velocity.ravel()
                 self.curr_pose = np.dot(self.curr_pose, np.linalg.inv(T))
-                print(f"using motion model: translation = {np.linalg.norm(self.velocity):.3f}")
+                #print(f"using motion model: translation = {np.linalg.norm(self.velocity):.3f}")
         
         # update previous frame data
         self.prev_img = gray.copy()

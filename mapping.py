@@ -1,6 +1,11 @@
 import open3d as o3d
 import numpy as np
 
+def _vis_settings(vis):
+    opt = vis.get_render_option()
+    opt.background_color = np.asarray([0, 0, 0])
+    opt.point_size = 1.0  # not too big
+
 class Mapping:
     def __init__(self, display=None, show_3d_out=False):
         self.display = display
@@ -15,9 +20,7 @@ class Mapping:
         self.vis.add_geometry(self.pcd)
 
         # background color and point size
-        opt = self.vis.get_render_option()
-        opt.background_color = np.asarray([0, 0, 0])
-        opt.point_size = 1.0  # not too big
+        _vis_settings(self.vis)
 
         # flag
         self.first_update = True
@@ -38,10 +41,12 @@ class Mapping:
         current_pcd = o3d.geometry.PointCloud()
         current_pcd.points = o3d.utility.Vector3dVector(points)
         
-        if colors is not None:
-            current_pcd.colors = o3d.utility.Vector3dVector(colors)
-        else:
-            current_pcd.paint_uniform_color([1, 1, 1])
+        # if colors is not None:
+        #     current_pcd.colors = o3d.utility.Vector3dVector(colors)
+        # else:
+        #     current_pcd.paint_uniform_color([1, 1, 1])
+
+        current_pcd.paint_uniform_color([0, 1, 0]) # green [r,g,b]
 
         # if first update, set the current point cloud as the initial point cloud
         if self.first_update:
@@ -81,9 +86,8 @@ class Mapping:
         if self.display is not None and not self.show_3d_out:
             img = self.vis.capture_screen_float_buffer(do_render=True)
             img_np = (np.asarray(img) * 255).astype(np.uint8)
-            
-            # send to display
-            self.display.update_display(img_np, '3d')
+            img_bgr = img_np[..., ::-1]
+            self.display.update_display(img_bgr, '3d') # send to display in bgr
         
     def draw_trajectory(self):
         if len(self.trajectory) > 1:
@@ -96,8 +100,7 @@ class Mapping:
             points = np.asarray(self.trajectory)
             lines = [[i, i + 1] for i in range(len(self.trajectory) - 1)]
             
-            # Red color for the trajectory line
-            colors = [[0.0, 0.0, 1.0] for _ in range(len(lines))]  # red [r,g,b]
+            colors = [[1.0, 0.0, 0.0] for _ in range(len(lines))]  # red [r,g,b]
             
             self.trajectory_line = o3d.geometry.LineSet(
                 points=o3d.utility.Vector3dVector(points),
@@ -108,5 +111,18 @@ class Mapping:
             # add to visualizer
             self.vis.add_geometry(self.trajectory_line)
 
+    def save_render(self):
+        # saves and open point cloud generated when program finishes
+        o3d.io.write_point_cloud("output_map.ply", self.pcd)
+
+        vis = o3d.visualization.Visualizer()
+        vis.create_window(window_name="3D Map Render", width=960, height=540)
+        _vis_settings(vis)
+        vis.add_geometry(self.pcd)
+        if self.trajectory_line is not None:
+            vis.add_geometry(self.trajectory_line)
+        vis.run()
+        vis.destroy_window()
+
     def close(self):
-        self.vis.destroy_window()
+        self.save_render()
