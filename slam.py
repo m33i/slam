@@ -6,6 +6,7 @@ from mapping import Mapping
 import sys
 import os
 from dotenv import load_dotenv
+import time
 
 load_dotenv() #load env file
 
@@ -20,7 +21,8 @@ ui_display = Display(W, H)
 K = np.array(([F, 0, W//2], [0, F, H//2], [0, 0, 1]))
 Kinv = np.linalg.inv(K)  # inverse of K
 
-feat_extractor = FeatExtractor(K=K)
+feature_type = os.getenv('FEATURE_TYPE', 'GFTT')
+feat_extractor = FeatExtractor(K=K, feature_type=feature_type)
 
 # get 3d visualization outside
 VIEW_3D = int(os.getenv('VIEW_3D', '0'))
@@ -75,20 +77,27 @@ def process_frame(frame):
 if __name__ == "__main__":
     # open video
     vid = sys.argv[1]
-    
     cap = cv2.VideoCapture(vid)
-    
+
     # check if video opened successfully
     if not cap.isOpened():
         print("error: Could not open video")
         exit()
-    
+
+    total_time = 0
+    frame_count = 0
+
     try:
         while cap.isOpened():
             # read frame, if no frame, end
             ret, frame = cap.read()
             if ret:
+                # measuring frame processing time
+                start = time.time()
                 process_frame(frame)
+                total_time += time.time() - start
+                frame_count += 1
+                
                 # exit if 'q' is pressed
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
@@ -98,3 +107,6 @@ if __name__ == "__main__":
         cap.release()
         cv2.destroyAllWindows()
         mapping.close()
+        if frame_count > 0:
+            print(f"average time per frame: {total_time/frame_count:.4f} s ({frame_count} frames)")
+            # useful to check between orb or gftt etc

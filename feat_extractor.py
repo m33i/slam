@@ -1,12 +1,23 @@
 import cv2
 import numpy as np
+import time
 
 class FeatExtractor:
-    def __init__(self, K=None):
-        # init ORB detector 
-        # TODO: maybe try again using goodFeaturesToTrack instead of ORB
-        self.orb = cv2.ORB_create(nfeatures=5000, scaleFactor=1.2, nlevels=8) # nfeatures=1000 works fine aswell
-        
+    def __init__(self, K=None, feature_type='GFTT'):
+        self.feature_type = feature_type.upper()
+        if self.feature_type == 'ORB':
+            self.orb = cv2.ORB_create(nfeatures=5000, scaleFactor=1.2, nlevels=8)
+            self.gftt = None
+            self.brief = None
+        else:
+            self.gftt = cv2.GFTTDetector_create(
+                maxCorners=5000,
+                qualityLevel=0.01,
+                minDistance=7,
+                blockSize=7
+            )
+            self.brief = cv2.xfeatures2d.BriefDescriptorExtractor_create()
+            self.orb = None
         self.K = K # intrinsic camera matrix
         self.good_matches_count = 0
 
@@ -34,9 +45,17 @@ class FeatExtractor:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         frame_with_features = frame.copy()
         matching_visualization = None
-
-        # detect and compute ORB features
-        keypoints, descriptors = self.orb.detectAndCompute(gray, None)
+        
+        if self.feature_type == 'ORB':
+            keypoints, descriptors = self.orb.detectAndCompute(gray, None)
+        else:
+            # detect GFTT keypoints
+            pts = self.gftt.detect(gray, None)
+            keypoints = pts if pts is not None else []
+            if len(keypoints) > 0:
+                keypoints, descriptors = self.brief.compute(gray, keypoints)
+            else:
+                descriptors = None
         
         # draw features on visualization frame
         for kp in keypoints:
@@ -44,7 +63,7 @@ class FeatExtractor:
             cv2.circle(frame_with_features, (x, y), 2, (0, 255, 0), -1)
         
         # get point coordinates for 3D mapping
-        points = np.array([kp.pt for kp in keypoints])
+        points = np.array([kp.pt for kp in keypoints]) if len(keypoints) > 0 else np.empty((0,2))
         
         # storing first frame
         if self.prev_img is None or self.prev_descriptors is None or descriptors is None:
