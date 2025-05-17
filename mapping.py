@@ -2,11 +2,13 @@ import open3d as o3d
 import numpy as np
 
 class Mapping:
-    def __init__(self, display=None):
+    def __init__(self, display=None, show_3d_out=False):
         self.display = display
+        self.show_3d_out = show_3d_out
+
         self.vis = o3d.visualization.Visualizer()
         # 3d window pos is set to the right
-        self.vis.create_window(window_name="3D Map", width=960, height=540, visible=False)
+        self.vis.create_window(window_name="3D Map", width=960, height=540, visible=self.show_3d_out)
         
         # initialize an empty point cloud
         self.pcd = o3d.geometry.PointCloud()
@@ -43,18 +45,15 @@ class Mapping:
 
         # if first update, set the current point cloud as the initial point cloud
         if self.first_update:
-            self.pcd = current_pcd
-            self.vis.remove_geometry(self.pcd)
-            self.vis.add_geometry(self.pcd)
+            self.pcd.points = current_pcd.points
+            self.pcd.colors = current_pcd.colors
             self.first_update = False
         else:
             # merge with existing point cloud
-            self.pcd.points = o3d.utility.Vector3dVector(
-                np.vstack((np.asarray(self.pcd.points), np.asarray(current_pcd.points)))
-            )
-            self.pcd.colors = o3d.utility.Vector3dVector(
-                np.vstack((np.asarray(self.pcd.colors), np.asarray(current_pcd.colors)))
-            )
+            points = np.vstack((np.asarray(self.pcd.points), np.asarray(current_pcd.points)))
+            colors = np.vstack((np.asarray(self.pcd.colors), np.asarray(current_pcd.colors)))
+            self.pcd.points = o3d.utility.Vector3dVector(points)
+            self.pcd.colors = o3d.utility.Vector3dVector(colors)
         
         # update trajectory and current position
         if len(args) > 0:
@@ -79,7 +78,7 @@ class Mapping:
         self.vis.update_renderer()
         
         # capture visualization for display
-        if self.display is not None:
+        if self.display is not None and not self.show_3d_out:
             img = self.vis.capture_screen_float_buffer(do_render=True)
             img_np = (np.asarray(img) * 255).astype(np.uint8)
             

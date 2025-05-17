@@ -4,6 +4,10 @@ from display import Display
 from feat_extractor import FeatExtractor
 from mapping import Mapping
 import sys
+import os
+from dotenv import load_dotenv
+
+load_dotenv() #load env file
 
 W = 1920 // 2
 H = 1080 // 2
@@ -17,7 +21,10 @@ K = np.array(([F, 0, W//2], [0, F, H//2], [0, 0, 1]))
 Kinv = np.linalg.inv(K)  # inverse of K
 
 feat_extractor = FeatExtractor(K=K)
-mapping = Mapping(display=ui_display)
+
+# get 3d visualization outside
+VIEW_3D = int(os.getenv('VIEW_3D', '0'))
+mapping = Mapping(display=ui_display, show_3d_out=VIEW_3D)
 
 
 def project_2d_to_3d(points_2d, depth=1.0):
