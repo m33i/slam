@@ -1,31 +1,43 @@
 import cv2
 import numpy as np
-import time
 
 class FeatExtractor:
-    def __init__(self, K=None, feature_type='GFTT'):
-        self.feature_type = feature_type.upper()
-        if self.feature_type == 'ORB':
-            self.orb = cv2.ORB_create(nfeatures=5000, scaleFactor=1.2, nlevels=8)
+    def __init__(self, K=None, detector='GFTT'):
+        self.detector = detector.upper()
+        if self.detector == 'ORB':
+            self.orb = cv2.ORB_create(
+                nfeatures=3000,
+                scaleFactor=1.2,
+                nlevels=8
+            )
             self.gftt = None
             self.brief = None
-        else:
+        else:  # GFTT + BRIEF
             self.gftt = cv2.GFTTDetector_create(
-                maxCorners=5000,
-                qualityLevel=0.01,  # lowest = better
-                minDistance=7,      # allows closer points
-                blockSize=7,        # small window for sens.
-                useHarrisDetector=True
+                maxCorners=3000,
+                qualityLevel=0.02,
+                minDistance=10,
+                blockSize=7,
+                #useHarrisDetector=True,  # Harris not really doing much in our case
+                #k=0.04
             )
-            self.brief = cv2.xfeatures2d.BriefDescriptorExtractor_create()
+            self.brief = cv2.xfeatures2d.BriefDescriptorExtractor_create(
+                bytes=32,
+                use_orientation=True # use orientation for better matching
+            )
             self.orb = None
+
         self.K = K # intrinsic camera matrix
         self.good_matches_count = 0
 
         # setup for FLANN based matcher 
         FLANN_INDEX_LSH = 6
-        index_params = dict(algorithm=FLANN_INDEX_LSH, table_number=6, key_size=12, multi_probe_level=1)
-        search_params = dict(checks=50)
+        index_params = dict( # basically high values are better for matching (but slower) 
+            algorithm=FLANN_INDEX_LSH, 
+            table_number=16, 
+            key_size=24, 
+            multi_probe_level=2)
+        search_params = dict(checks=100)
         self.flann = cv2.FlannBasedMatcher(indexParams=index_params, searchParams=search_params)
 
         self.prev_img = None
@@ -47,7 +59,7 @@ class FeatExtractor:
         frame_with_features = frame.copy()
         matching_visualization = None
         
-        if self.feature_type == 'ORB':
+        if self.detector == 'ORB':
             keypoints, descriptors = self.orb.detectAndCompute(gray, None)
         else:
             # detect GFTT keypoints

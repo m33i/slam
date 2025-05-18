@@ -13,6 +13,7 @@ H = 1080 // 2
 
 F = float(os.getenv('F', '270')) # focal length
 COLORS = os.getenv('COLORS', '0') == '1'
+SPEED = float(os.getenv('SPEED', '1.0')) # playback (0.5 = half, 2.0 = double)
 
 ui_display = Display(W, H)
 
@@ -96,6 +97,10 @@ if __name__ == "__main__":
                 process_frame(frame)
                 total_time += time.time() - start
                 frame_count += 1
+                
+                # speed up or slow down video playback
+                if SPEED != 1.0:
+                    time.sleep(1.0/(cap.get(cv2.CAP_PROP_FPS) * SPEED))
                 
                 # exit if 'q' is pressed
                 if cv2.waitKey(1) & 0xFF == ord('q'):

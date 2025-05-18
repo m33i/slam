@@ -23,6 +23,8 @@ O3D_OUT=1 python3 slam.py video_examples/test_kitti984.mp4
 
 `DETECTOR=ORB`  changes feature detector to orb (default is goodFeaturesToTrack -> GFTT + BRIEF decriptor)
 
+`SPEED=O.5`  changes video playback speed to 0.5; 2.0 = double speed
+
 ### WSL2 Fix
 ```bash
 export XDG_SESSION_TYPE=x11
