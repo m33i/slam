@@ -37,8 +37,6 @@ def camera_position_callback(vis):
 
 def generate_colors_from_image(features, frame):
     #generate colors based on pixel values
-    if len(features) == 0:
-        return np.zeros((0, 3))
     valid_y = np.clip(features[:, 1], 0, frame.shape[0]-1).astype(int)
     valid_x = np.clip(features[:, 0], 0, frame.shape[1]-1).astype(int)
     colors_bgr = frame[valid_y, valid_x]

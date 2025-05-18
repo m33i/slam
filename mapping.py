@@ -3,13 +3,13 @@ import numpy as np
 import utils
 
 class Mapping:
-    def __init__(self, display=None, show_3d_out=False):
+    def __init__(self, display=None, open3d_out=False):
         self.display = display
-        self.show_3d_out = show_3d_out
+        self.open3d_out = open3d_out
 
         self.vis = o3d.visualization.Visualizer()
         # 3d window pos is set to the right
-        self.vis.create_window(window_name="3D Map", width=960, height=540, visible=self.show_3d_out)
+        self.vis.create_window(window_name="3D Map", width=960, height=540, visible=self.open3d_out)
         
         # initialize an empty point cloud
         self.pcd = o3d.geometry.PointCloud()
@@ -35,7 +35,10 @@ class Mapping:
         current_pcd = o3d.geometry.PointCloud()
         current_pcd.points = o3d.utility.Vector3dVector(points)
 
-        current_pcd.paint_uniform_color([0, 1, 0]) # green [r,g,b]
+        if colors is not None:
+            current_pcd.colors = o3d.utility.Vector3dVector(colors)
+        else:
+            current_pcd.paint_uniform_color([1, 1, 1])
 
         # if first update, set the current point cloud as the initial point cloud
         if self.first_update:
@@ -65,7 +68,7 @@ class Mapping:
         self.vis.update_renderer()
         
         # capture visualization for display
-        if self.display is not None and not self.show_3d_out:
+        if self.display is not None and not self.open3d_out:
             img = self.vis.capture_screen_float_buffer(do_render=True)
             img_np = (np.asarray(img) * 255).astype(np.uint8)
             img_bgr = img_np[..., ::-1]

@@ -11,7 +11,8 @@ import time
 W = 1920 // 2
 H = 1080 // 2
 
-F = 270  # focal length
+F = float(os.getenv('F', '270')) # focal length
+COLORS = os.getenv('COLORS', '0') == '1'
 
 ui_display = Display(W, H)
 
@@ -19,13 +20,13 @@ ui_display = Display(W, H)
 K = np.array(([F, 0, W//2], [0, F, H//2], [0, 0, 1]))
 Kinv = np.linalg.inv(K)  # inverse of K
 
-feature_type = os.getenv('FEATURE_TYPE', 'GFTT')
-feat_extractor = FeatExtractor(K=K, feature_type=feature_type)
-
 # get 3d visualization outside
-VIEW_3D = int(os.getenv('VIEW_3D', '0'))
-mapping = Mapping(display=ui_display, show_3d_out=VIEW_3D)
+O3D_OUT = os.getenv('O3D_OUT', '0') == '1'
+mapping = Mapping(display=ui_display, open3d_out=O3D_OUT)
 
+# feature detector type
+DETECTOR = os.getenv('DETECTOR', 'GFTT')
+feat_extractor = FeatExtractor(K=K, detector=DETECTOR)
 
 def project_2d_to_3d(points_2d, depth=1.0):
     # converting 2D points to 3D using camera matrix
@@ -61,11 +62,12 @@ def process_frame(frame):
             points_3d_transformed = (pose @ points_3d_homo.T).T
             points_3d = points_3d_transformed[:, :3]
             
-            # colors_rgb = utils.generatecolors_from_image(features, frame)
-            # mapping.update_map(points_3d, colors_rgb, pose)
-
-            color = np.array([[0, 1, 0]] * len(points_3d)) # green [r,g,b]
-            mapping.update_map(points_3d, color, pose)
+            if COLORS:
+                colors_rgb = utils.generate_colors_from_image(features, resized_frame)
+                mapping.update_map(points_3d, colors_rgb, pose)
+            else:
+                color = np.array([[0, 1, 0]] * len(points_3d)) # green [r,g,b]
+                mapping.update_map(points_3d, color, pose)
         else:
             print(f"iInvalid 3D points shape: {points_3d.shape if points_3d is not None else None}")
    

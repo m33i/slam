@@ -1,15 +1,29 @@
+## dependencies
+```bash
+pip install numpy opencv-contrib-python open3d
+```
+
 ## usage
-``python3 slam.py <video_path>``
 
-## main dependencies needed
-``numpy``
-``opencv``
-``open3d``
+```bash
+#examples
+# focal length 500 and 3d with colors
+F=500 COLORS=1 python3 slam.py video_examples/test_kitti984.mp4
 
-## env variables:
+# focal length 270 (default) open3d window detached and 3d in rgb green
+O3D_OUT=1 python3 slam.py video_examples/test_kitti984.mp4
+```
+### options
 
-VIEW_3D=0
+`F=n`  changes focal length (default is 270)
 
-FEATURE_TYPE=GFTT # current options: ORB , GFTT (goodFeaturesToTrack)
+`COLORS=1`  3d generation in colors (default is green)
 
-XDG_SESSION_TYPE=x11 # wsl2 fix
+`O3D_OUT=1`  gets open3d window outside the main display for better visualization (default is 0)
+
+`DETECTOR=ORB`  changes feature detector to orb (default is goodFeaturesToTrack -> GFTT + BRIEF decriptor)
+
+### WSL2 Fix
+```bash
+export XDG_SESSION_TYPE=x11
+```
