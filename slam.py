@@ -3,12 +3,10 @@ import numpy as np
 from display import Display
 from feat_extractor import FeatExtractor
 from mapping import Mapping
+import utils
 import sys
 import os
-from dotenv import load_dotenv
 import time
-
-load_dotenv() #load env file
 
 W = 1920 // 2
 H = 1080 // 2
@@ -63,11 +61,7 @@ def process_frame(frame):
             points_3d_transformed = (pose @ points_3d_homo.T).T
             points_3d = points_3d_transformed[:, :3]
             
-            # generate colors based on pixel values
-            # valid_y = np.clip(features[:, 1], 0, frame.shape[0]-1).astype(int)
-            # valid_x = np.clip(features[:, 0], 0, frame.shape[1]-1).astype(int)
-            # colors_bgr = frame[valid_y, valid_x]
-            # colors_rgb = colors_bgr[..., ::-1] / 255.0  # bgr to rgb
+            # colors_rgb = utils.generatecolors_from_image(features, frame)
             # mapping.update_map(points_3d, colors_rgb, pose)
 
             color = np.array([[0, 1, 0]] * len(points_3d)) # green [r,g,b]
@@ -111,5 +105,5 @@ if __name__ == "__main__":
         cv2.destroyAllWindows()
         mapping.close()
         if frame_count > 0:
-            print(f"average time per frame: {total_time/frame_count:.4f} s ({frame_count} frames)")
+            print(f"\raverage time per frame: {total_time/frame_count:.4f} s ({frame_count} frames)")
             # useful to check between orb or gftt etc

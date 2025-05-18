@@ -1,10 +1,6 @@
 import open3d as o3d
 import numpy as np
-
-def _vis_settings(vis):
-    opt = vis.get_render_option()
-    opt.background_color = np.asarray([0, 0, 0])
-    opt.point_size = 1.0  # not too big
+import utils
 
 class Mapping:
     def __init__(self, display=None, show_3d_out=False):
@@ -18,9 +14,7 @@ class Mapping:
         # initialize an empty point cloud
         self.pcd = o3d.geometry.PointCloud()
         self.vis.add_geometry(self.pcd)
-
-        # background color and point size
-        _vis_settings(self.vis)
+        utils.vis_settings(self.vis)
 
         # flag
         self.first_update = True
@@ -40,11 +34,6 @@ class Mapping:
         points = np.asarray(points)
         current_pcd = o3d.geometry.PointCloud()
         current_pcd.points = o3d.utility.Vector3dVector(points)
-        
-        # if colors is not None:
-        #     current_pcd.colors = o3d.utility.Vector3dVector(colors)
-        # else:
-        #     current_pcd.paint_uniform_color([1, 1, 1])
 
         current_pcd.paint_uniform_color([0, 1, 0]) # green [r,g,b]
 
@@ -66,14 +55,7 @@ class Mapping:
             current_position = pose[:3, 3]
             self.trajectory.append(current_position)
             self.draw_trajectory()
-
-            # camera view (right now looking at the current position and facing the negative z-axis)
-            # TODO: set the camera to look at a different angle (maybe looking from the top like a drone)
-            view_control = self.vis.get_view_control()
-            view_control.set_lookat(current_position)
-            view_control.set_front([0, 0, -1])
-            view_control.set_up([0, -1, 0])
-            #view_control.set_zoom(0.1)  # we can use this to look like we are driving inside the street
+            utils.viewc_settings(self.vis)
 
         # update geometry
         self.vis.update_geometry(self.pcd)
@@ -91,7 +73,6 @@ class Mapping:
         
     def draw_trajectory(self):
         if len(self.trajectory) > 1:
-            # TODO: add green squares for the trajectory so we can see the path more clearly
             # remove previous line if exists
             if self.trajectory_line is not None:
                 self.vis.remove_geometry(self.trajectory_line)
@@ -113,14 +94,20 @@ class Mapping:
 
     def save_render(self):
         # saves and open point cloud generated when program finishes
-        o3d.io.write_point_cloud("output_map.ply", self.pcd)
+        o3d.io.write_point_cloud("output.ply", self.pcd)
 
         vis = o3d.visualization.Visualizer()
         vis.create_window(window_name="3D Map Render", width=960, height=540)
-        _vis_settings(vis)
+        utils.vis_settings(vis)
         vis.add_geometry(self.pcd)
         if self.trajectory_line is not None:
             vis.add_geometry(self.trajectory_line)
+        utils.viewc_settings(vis)
+        
+        # leaving this aside for now
+        #utils.show_keyframe_square(vis, self.trajectory, size=0.15, color=[1,0,0])
+        #vis.register_animation_callback(utils.camera_position_callback)
+
         vis.run()
         vis.destroy_window()
 
