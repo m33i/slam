@@ -76,7 +76,7 @@ class FeatExtractor:
             else:
                 descriptors = None
 
-            mask = utils.get_mask_and_line(keypoints, gray.shape[0], gray.shape[1], self.F_MASK, self.SKY_AUTO)
+            mask, mask_portion = utils.get_mask_and_line(keypoints, gray.shape[0], gray.shape[1], self.F_MASK, self.SKY_AUTO)
 
             if mask is not None:
                 pts = self.gftt.detect(gray, mask)
