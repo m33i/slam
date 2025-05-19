@@ -1,8 +1,11 @@
 import open3d as o3d
 import numpy as np
 import utils
+import os
 
 class Mapping:
+    KF = int(os.getenv('KF', '0'))
+
     def __init__(self, display=None, open3d_out=False):
         self.display = display
         self.open3d_out = open3d_out
@@ -107,9 +110,9 @@ class Mapping:
             vis.add_geometry(self.trajectory_line)
         utils.viewc_settings(vis)
         
-        # leaving this aside for now
-        #utils.show_keyframe_square(vis, self.trajectory, size=0.15, color=[1,0,0])
-        #vis.register_animation_callback(utils.camera_position_callback)
+        if self.KF:
+            utils.show_keyframe_square(vis, self.trajectory, size=0.15, color=[1,0,0])
+            vis.register_animation_callback(utils.camera_position_callback)
 
         vis.run()
         vis.destroy_window()

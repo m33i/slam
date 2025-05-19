@@ -1,5 +1,6 @@
 import open3d as o3d
 import numpy as np
+import cv2
 
 def viewc_settings(vis):
     view_control = vis.get_view_control()
@@ -42,3 +43,30 @@ def generate_colors_from_image(features, frame):
     colors_bgr = frame[valid_y, valid_x]
     colors_rgb = colors_bgr[..., ::-1] / 255.0  # bgr to rgb normalized
     return colors_rgb
+
+def get_mask_and_line(keypoints, height, width, f_mask=1.0, sky_auto=True):
+    if abs(f_mask) < 1.0:
+        mask_portion = abs(f_mask)
+    elif sky_auto and any(kp.pt[1] < height * 0.2 for kp in keypoints):
+        mask_portion = 0.6
+        f_mask = 0.6
+    else:
+        mask_portion = 1.0
+
+    mask = None
+    if abs(f_mask) < 1.0:
+        mask = np.zeros((height, width), dtype=np.uint8)
+        if f_mask > 0:
+            # upper part
+            start_row = int(height * (1 - mask_portion))
+            mask[start_row:, :] = 255
+        else:
+            # lower part
+            end_row = int(height * mask_portion)
+            mask[:end_row, :] = 255
+    elif mask_portion < 1.0:
+        # auto
+        mask = np.zeros((height, width), dtype=np.uint8)
+        start_row = int(height * (1 - mask_portion))
+        mask[start_row:, :] = 255
+    return mask, mask_portion

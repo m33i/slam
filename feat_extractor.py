@@ -1,7 +1,13 @@
 import cv2
 import numpy as np
+import os
+import utils
 
 class FeatExtractor:
+    # experimental to avoid sky features and so on
+    F_MASK = float(os.getenv('F_MASK', '1.0'))
+    SKY_AUTO = int(os.getenv('SKY_AUTO', '0'))
+
     def __init__(self, K=None, detector='GFTT'):
         self.detector = detector.upper()
         if self.detector == 'ORB':
@@ -69,6 +75,16 @@ class FeatExtractor:
                 keypoints, descriptors = self.brief.compute(gray, keypoints)
             else:
                 descriptors = None
+
+            mask = utils.get_mask_and_line(keypoints, gray.shape[0], gray.shape[1], self.F_MASK, self.SKY_AUTO)
+
+            if mask is not None:
+                pts = self.gftt.detect(gray, mask)
+                keypoints = pts if pts is not None else []
+                if len(keypoints) > 0:
+                    keypoints, descriptors = self.brief.compute(gray, keypoints)
+                else:
+                    descriptors = None
         
         # draw features on visualization frame
         for kp in keypoints:
