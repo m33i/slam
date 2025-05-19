@@ -34,3 +34,6 @@ These options create a mask to avoid extracting features from certain areas, suc
 ```bash
 export XDG_SESSION_TYPE=x11
 ```
+
+![](https://media.discordapp.net/attachments/801120839252049950/1373783623412486235/image.png?ex=682bab33&is=682a59b3&hm=743140a7d4f63ba22a997b13147c3f9e256b0fd1700c8d5d3f17f7163b0e1237&=&format=webp&quality=lossless)
+![](https://cdn.discordapp.com/attachments/801120839252049950/1373800000206667867/image.png?ex=682bba74&is=682a68f4&hm=2bf4b6003753431c1ef87976e998d4a99abd82fc0f58263932d47ae1b3be4ac4&format=webp&quality=lossless&width=1644&height=856)
