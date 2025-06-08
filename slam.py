@@ -13,7 +13,6 @@ H = 1080 // 2
 
 F = float(os.getenv('F', '270')) # focal length
 COLORS = os.getenv('COLORS', '0') == '1'
-SPEED = float(os.getenv('SPEED', '1.0')) # playback (0.5 = half, 2.0 = double)
 
 ui_display = Display(W, H)
 
@@ -35,6 +34,18 @@ def project_2d_to_3d(points_2d, depth=1.0):
     points_3d = depth * (Kinv @ points_2d_homogeneous.T).T
     return points_3d
 
+def handle_control_change(control):
+    global feat_extractor, mapping, COLORS
+    if control == 'orb':
+        new_detector = 'ORB' if ui_display.states['orb'] else 'GFTT'
+        feat_extractor = FeatExtractor(K=K, detector=new_detector)
+        print(f"\n|| Switched detector to {new_detector}")
+    elif control == 'colors':
+        COLORS = ui_display.states['colors']
+        print(f"\n|| Colors {'enabled' if COLORS else 'disabled'}")
+    elif control == 'points_3d':
+        print(f"\n|| 3D points {'enabled' if ui_display.states['points_3d'] else 'disabled'}")
+
 def process_frame(frame):   
     # resize input frame
     resized_frame = cv2.resize(frame, (W, H))
@@ -52,26 +63,21 @@ def process_frame(frame):
     if matching_display is not None:
         ui_display.update_display(matching_display, 'matching')
 
-    # update 3D map if points are available
-    if features is not None and len(features) > 0:
-        # convert 2D points to 3D space
-        points_3d = project_2d_to_3d(features)
-        
-        # apply pose transformation to the 3D points
-        if points_3d is not None and points_3d.shape[1] == 3:
-            points_3d_homo = np.hstack((points_3d, np.ones((len(points_3d), 1))))
-            points_3d_transformed = (pose @ points_3d_homo.T).T
-            points_3d = points_3d_transformed[:, :3]
-            
-            if COLORS:
-                colors_rgb = utils.generate_colors_from_image(features, resized_frame)
-                mapping.update_map(points_3d, colors_rgb, pose)
-            else:
-                color = np.array([[0, 1, 0]] * len(points_3d)) # green [r,g,b]
-                mapping.update_map(points_3d, color, pose)
+    # always update trajectory with pose
+    if pose is not None:
+        if ui_display.states['points_3d'] and features is not None and len(features) > 0:
+            # convert 2D points to 3D space
+            points_3d = project_2d_to_3d(features)
+            # apply pose transformation to the 3D points
+            if points_3d is not None and points_3d.shape[1] == 3:
+                points_3d_homo = np.hstack((points_3d, np.ones((len(points_3d), 1))))
+                points_3d = (pose @ points_3d_homo.T).T[:, :3]
+                
+                # green rgb by default if colors are disabled
+                colors = utils.generate_colors_from_image(features, resized_frame) if ui_display.states['colors'] else np.array([[0, 1, 0]] * len(points_3d))
+                mapping.update_map(points_3d, colors, pose)
         else:
-            print(f"iInvalid 3D points shape: {points_3d.shape if points_3d is not None else None}")
-   
+            mapping.update_map([], None, pose)
     return features_display
 
 if __name__ == "__main__":
@@ -84,23 +90,31 @@ if __name__ == "__main__":
         print("error: Could not open video")
         exit()
 
-    total_time = 0
-    frame_count = 0
+    last_time = time.time()
+    frames = 0
+
+    # set up mouse callback
+    def mouse_callback(event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            control = ui_display.check_click(x, y)
+            if control:
+                handle_control_change(control)
+
+    cv2.setMouseCallback(ui_display.window_name, mouse_callback)
 
     try:
         while cap.isOpened():
             # read frame, if no frame, end
             ret, frame = cap.read()
             if ret:
-                # measuring frame processing time
-                start = time.time()
                 process_frame(frame)
-                total_time += time.time() - start
-                frame_count += 1
                 
-                # speed up or slow down video playback
-                if SPEED != 1.0:
-                    time.sleep(1.0/(cap.get(cv2.CAP_PROP_FPS) * SPEED))
+                # measuring frame processing time
+                frames += 1
+                if time.time() - last_time >= 1.0:
+                    ui_display.fps = frames / (time.time() - last_time)
+                    frames = 0
+                    last_time = time.time()
                 
                 # exit if 'q' is pressed
                 if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -111,6 +125,3 @@ if __name__ == "__main__":
         cap.release()
         cv2.destroyAllWindows()
         mapping.close()
-        if frame_count > 0:
-            print(f"\raverage time per frame: {total_time/frame_count:.4f} s ({frame_count} frames)")
-            # useful to check between orb or gftt etc

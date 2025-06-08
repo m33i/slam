@@ -30,32 +30,7 @@ class Mapping:
         self.trajectory.append([0, 0, 0])
 
     def update_map(self, points, colors=None, *args):
-        if len(points) == 0:
-            return
-
-        # convert points to Open3D format point Cloud
-        points = np.asarray(points)
-        current_pcd = o3d.geometry.PointCloud()
-        current_pcd.points = o3d.utility.Vector3dVector(points)
-
-        if colors is not None:
-            current_pcd.colors = o3d.utility.Vector3dVector(colors)
-        else:
-            current_pcd.paint_uniform_color([1, 1, 1])
-
-        # if first update, set the current point cloud as the initial point cloud
-        if self.first_update:
-            self.pcd.points = current_pcd.points
-            self.pcd.colors = current_pcd.colors
-            self.first_update = False
-        else:
-            # merge with existing point cloud
-            points = np.vstack((np.asarray(self.pcd.points), np.asarray(current_pcd.points)))
-            colors = np.vstack((np.asarray(self.pcd.colors), np.asarray(current_pcd.colors)))
-            self.pcd.points = o3d.utility.Vector3dVector(points)
-            self.pcd.colors = o3d.utility.Vector3dVector(colors)
-        
-        # update trajectory and current position
+        # always update trajectory and current position
         if len(args) > 0:
             pose = args[0]
             current_position = pose[:3, 3]
@@ -63,8 +38,33 @@ class Mapping:
             self.draw_trajectory()
             utils.viewc_settings(self.vis)
 
-        # update geometry
-        self.vis.update_geometry(self.pcd)
+            # kf
+            if self.KF:
+                utils.show_keyframe_square(self.vis, self.trajectory, size=0.15, color=[1,0,0])
+                
+        # only update point cloud if points are provided
+        if len(points) > 0:
+            # convert points to Open3D format point Cloud
+            points = np.asarray(points)
+            current_pcd = o3d.geometry.PointCloud()
+            current_pcd.points = o3d.utility.Vector3dVector(points)
+            # set colors if provided
+            current_pcd.colors = o3d.utility.Vector3dVector(colors) if colors is not None else o3d.utility.Vector3dVector([[1, 1, 1]] * len(points))
+
+            # if first update, set the current point cloud as the initial point cloud
+            if self.first_update:
+                self.pcd.points = current_pcd.points
+                self.pcd.colors = current_pcd.colors
+                self.first_update = False
+            else:
+                # merge with existing point cloud
+                points = np.vstack((np.asarray(self.pcd.points), np.asarray(current_pcd.points)))
+                colors = np.vstack((np.asarray(self.pcd.colors), np.asarray(current_pcd.colors)))
+                self.pcd.points = o3d.utility.Vector3dVector(points)
+                self.pcd.colors = o3d.utility.Vector3dVector(colors)
+            
+            # update geometry
+            self.vis.update_geometry(self.pcd)
 
         # update visualization
         self.vis.poll_events()
@@ -112,7 +112,6 @@ class Mapping:
         
         if self.KF:
             utils.show_keyframe_square(vis, self.trajectory, size=0.15, color=[1,0,0])
-            vis.register_animation_callback(utils.camera_position_callback)
 
         vis.run()
         vis.destroy_window()

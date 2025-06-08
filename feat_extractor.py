@@ -197,10 +197,14 @@ class FeatExtractor:
             # recover pose from essential matrix
             _, R, t, new_mask = cv2.recoverPose(E, src_pts, dst_pts, self.K, mask=mask)
             
-            # check if rotation is reasonable (not too large)
-            angle = np.arccos((np.trace(R) - 1) / 2)
-            if angle > 0.3:  # max 0.3 radians (about 17 degrees) rotation between frames
-                print(f"rotation too large: {angle:.2f} rad")
+            # basic rotation matrix check
+            if not np.allclose(np.linalg.det(R), 1.0, atol=1e-3):
+                return False, None, None
+            
+            # checking rotation angle
+            trace = np.clip(np.trace(R), -1.0, 3.0)
+            angle = np.arccos((trace - 1) / 2)
+            if angle > 1.0:  # about 57 degrees
                 return False, None, None
             
             return True, R, t
@@ -225,7 +229,7 @@ class FeatExtractor:
                 flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS
             )
             
-            cv2.putText(match_img, f"matches: {self.good_matches_count}", (10, 30),
+            cv2.putText(match_img, f"Matches: {self.good_matches_count}", (10, 30),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
             
             return match_img

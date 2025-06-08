@@ -23,8 +23,6 @@ O3D_OUT=1 python3 slam.py video_examples/test_kitti984.mp4
 
 `DETECTOR=ORB`  Changes feature detector to orb (default is goodFeaturesToTrack -> GFTT + BRIEF descriptor)
 
-`SPEED=O.5`  Changes video playback speed from 1 to 0.5; 2.0 = double speed
-
 `KF=1`  Will show keyframes as red squares
 
 `F_MASK` and `SKY_AUTO`
