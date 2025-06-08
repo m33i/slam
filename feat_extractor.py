@@ -4,7 +4,7 @@ import os
 import utils
 
 class FeatExtractor:
-    # experimental to avoid sky features and so on
+    # experimental params to avoid sky features and so on
     F_MASK = float(os.getenv('F_MASK', '1.0'))
     SKY_AUTO = int(os.getenv('SKY_AUTO', '0'))
 
