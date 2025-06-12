@@ -55,7 +55,7 @@ class FeatExtractor:
         self.last_R = np.eye(3)
         self.last_t = np.zeros((3, 1))
         self.velocity = np.zeros((3, 1))
-        self.scale_factor = 0.05  # scale for translation
+        self.scale_factor = 0.06  # scale for translation
 
     def process_frame(self, frame):
         if frame is None:
@@ -134,13 +134,11 @@ class FeatExtractor:
                 
                 # update pose (camera moves in opposite direction)
                 self.curr_pose = np.dot(self.curr_pose, np.linalg.inv(T))
-                #print(f"motion estimated: translation = {np.linalg.norm(t):.3f}")
             else:
                 # using predicted motion based on previous velocity
                 T = np.eye(4)
                 T[:3, 3] = self.velocity.ravel()
                 self.curr_pose = np.dot(self.curr_pose, np.linalg.inv(T))
-                #print(f"using motion model: translation = {np.linalg.norm(self.velocity):.3f}")
         
         # update previous frame data
         self.prev_img = gray.copy()
@@ -230,7 +228,7 @@ class FeatExtractor:
             )
             
             cv2.putText(match_img, f"Matches: {self.good_matches_count}", (10, 30),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.85, (0, 255, 0), 2)
             
             return match_img
         except Exception as e:

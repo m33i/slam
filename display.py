@@ -39,9 +39,9 @@ class Display:
         
         # draw labels
         cv2.putText(self.combined_display, label, (x+34, y+10), 
-                   cv2.FONT_HERSHEY_DUPLEX, 0.85, (0,0,0), 5, cv2.LINE_AA)  # shadow
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.85, (0,0,0), 2)  # shadow
         cv2.putText(self.combined_display, label, (x+32, y+8), 
-                   cv2.FONT_HERSHEY_DUPLEX, 0.85, (255, 255, 255), 2, cv2.LINE_AA)
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.85, (255, 255, 255), 2)
 
     def check_click(self, x, y):
         if x < self.panel_width:  # panel width
@@ -85,7 +85,7 @@ class Display:
         
         # draw FPS
         cv2.putText(self.combined_display, f"FPS: {self.fps:.1f}", (18, y_pos+18),
-                   cv2.FONT_HERSHEY_DUPLEX, 0.85, (0, 255, 0), 2, cv2.LINE_AA)
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.85, (0, 255, 0), 2)
         
         # main displays
         self.combined_display[:self.H, self.panel_width:self.panel_width+self.W] = self.displays['features']
@@ -94,9 +94,9 @@ class Display:
         
         # display labels
         cv2.putText(self.combined_display, "Features", (self.panel_width+20, 32), 
-                   cv2.FONT_HERSHEY_DUPLEX, 0.85, (0, 255, 0), 2, cv2.LINE_AA)
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.85, (0, 255, 0), 2)
         cv2.putText(self.combined_display, "Open3D", (self.panel_width + self.W + 20, 32), 
-                   cv2.FONT_HERSHEY_DUPLEX, 0.85, (0, 255, 0), 2, cv2.LINE_AA)
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.85, (0, 255, 0), 2)
     
         cv2.imshow(self.window_name, self.combined_display)
     

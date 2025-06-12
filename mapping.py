@@ -6,9 +6,10 @@ import os
 class Mapping:
     KF = int(os.getenv('KF', '0'))
 
-    def __init__(self, display=None, open3d_out=False):
+    def __init__(self, display=None, open3d_out=False, K=None):
         self.display = display
         self.open3d_out = open3d_out
+        self.K = K
 
         self.vis = o3d.visualization.Visualizer()
         # 3d window pos is set to the right
@@ -40,7 +41,8 @@ class Mapping:
 
             # kf
             if self.KF:
-                utils.show_keyframe_square(self.vis, self.trajectory, size=0.15, color=[1,0,0])
+                utils.show_keyframe_square(self.vis, self.trajectory, K=self.K)
+                utils.viewc_settings(self.vis)
                 
         # only update point cloud if points are provided
         if len(points) > 0:
@@ -111,7 +113,8 @@ class Mapping:
         utils.viewc_settings(vis)
         
         if self.KF:
-            utils.show_keyframe_square(vis, self.trajectory, size=0.15, color=[1,0,0])
+            utils.show_keyframe_square(vis, self.trajectory, K=self.K)
+            utils.viewc_settings(vis)
 
         vis.run()
         vis.destroy_window()

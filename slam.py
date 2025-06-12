@@ -24,7 +24,7 @@ class SLAM:
         self.Kinv = np.linalg.inv(self.K)  # inverse of K
 
         self.ui_display = Display(self.W, self.H)
-        self.mapping = Mapping(display=self.ui_display, open3d_out=self.O3D_OUT)
+        self.mapping = Mapping(display=self.ui_display, open3d_out=self.O3D_OUT, K=self.K)
         self.feat_extractor = FeatExtractor(K=self.K, detector=self.DETECTOR)
 
         # open video
@@ -33,7 +33,7 @@ class SLAM:
 
         # check if video opened successfully
         if not self.cap.isOpened():
-            print("error: Could not open video")
+            print("error: Could Not open video")
             exit()
 
         self.last_time = time.time()
@@ -67,7 +67,7 @@ class SLAM:
         matching_display, features_display, features = self.feat_extractor.process_frame(resized_frame)
         pose = self.feat_extractor.get_pose()
 
-        print("pose:\n", pose) # for debugging pose till i am sure it's correct
+        print("pose:\n", pose) # debugging pose
         
         # update displays
         if features_display is not None:

@@ -1,6 +1,5 @@
 import open3d as o3d
 import numpy as np
-import cv2
 
 def viewc_settings(vis):
     view_control = vis.get_view_control()
@@ -13,21 +12,50 @@ def vis_settings(vis):
     opt.background_color = np.asarray([0, 0, 0])
     opt.point_size = 2
 
-# for later
-def show_keyframe_square(vis, trajectory, size=0.15, color=[1, 0, 0]):
-    points = np.asarray(trajectory)
-    for center in points:
-        corners = np.array([
-            [size, size, 0], [size, -size, 0], [-size, -size, 0], [-size, size, 0]
-        ]) / 2 + center
-        lines = [[0,1],[1,2],[2,3],[3,0]]
-        colors = [color for _ in lines]
-        square = o3d.geometry.LineSet(
-            points=o3d.utility.Vector3dVector(corners),
-            lines=o3d.utility.Vector2iVector(lines)
-        )
-        square.colors = o3d.utility.Vector3dVector(colors)
-        vis.add_geometry(square)
+# show keyframe as a wireframe frustums square
+def show_keyframe_square(vis, trajectory, K, start_index=0):
+    if start_index >= len(trajectory):
+        return
+        
+    points = np.asarray(trajectory)[start_index:]
+
+    # calculate template using camera intrinsics
+    z_near, z_far = 0.1, 0.2
+    fx, fy = K[0,0], K[1,1]
+    cx, cy = K[0,2], K[1,2]
+    
+    template = np.array([
+        [0, 0, 0],  # camera center
+        # near rectangle
+        [z_near * (-cx)/fx, z_near * (-cy)/fy, z_near],
+        [z_near * (640-cx)/fx, z_near * (-cy)/fy, z_near],
+        [z_near * (640-cx)/fx, z_near * (480-cy)/fy, z_near],
+        [z_near * (-cx)/fx, z_near * (480-cy)/fy, z_near],
+        # far rectangle (scaled version of near)
+        [z_far * (-cx)/fx, z_far * (-cy)/fy, z_far],
+        [z_far * (640-cx)/fx, z_far * (-cy)/fy, z_far],
+        [z_far * (640-cx)/fx, z_far * (480-cy)/fy, z_far],
+        [z_far * (-cx)/fx, z_far * (480-cy)/fy, z_far]
+    ])
+
+    # define edges/corners
+    _edges = [
+        [0,1], [0,2], [0,3], [0,4],  # lines from center
+        [1,2], [2,3], [3,4], [4,1],  # near rectangle
+        [5,6], [6,7], [7,8], [8,5],  # far rectangle
+        [1,5], [2,6], [3,7], [4,8]   # connecting lines
+    ]
+    
+    vertices = np.tile(template, (len(points), 1)) + np.repeat(points, len(template), axis=0)
+    edges = np.array(_edges) + np.arange(0, len(points) * len(template), len(template))[:, None, None]
+    edges = edges.reshape(-1, 2)
+    
+    frustums = o3d.geometry.LineSet(
+        points=o3d.utility.Vector3dVector(vertices),
+        lines=o3d.utility.Vector2iVector(edges)
+    )
+    frustums.colors = o3d.utility.Vector3dVector([[0.0, 1.0, 0.0] for _ in range(len(edges))])
+    vis.add_geometry(frustums)
 
 # debugging stuff
 def camera_position_callback(vis):
