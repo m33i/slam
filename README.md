@@ -1,4 +1,4 @@
-Lightweight monocular SLAM with OpenCV and Open3d for visualization
+Lightweight monocular SLAM from scratch with OpenCV and Open3D for visualization
 
 ## Dependencies
 ```bash
@@ -33,3 +33,5 @@ export XDG_SESSION_TYPE=x11
 
 ![](demo_files/city_tram_F500.png)
 ![](demo_files/road_by_lake_F500.png)
+![](demo_files/_white_bg.png)
+![](demo_files/demo.mp4)
